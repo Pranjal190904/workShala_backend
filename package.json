@@ -1,0 +1,25 @@
+{
+  "name": "jobwebsite_backend",
+  "version": "1.0.0",
+  "description": "backend for workShala",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "author": "pranjal",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "http-errors": "^2.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.0",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.9.7",
+    "passport": "^0.6.0",
+    "passport-google-oauth20": "^2.0.0"
+  }
+}
