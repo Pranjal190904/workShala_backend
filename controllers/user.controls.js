@@ -102,26 +102,28 @@ async function refreshToken(req,res)
     });
 }
 
+//function to change password
 async function changePassword(req,res)
 {
     const {email,password,newPassword}=req.body;
     const user=await userModel.findOne({email:email});
-    if(!email)
+    if(!user)
     {
         res.status(404).json({message:"user not found"});
         return ;
     }
-    const matchPassword=bcrypt.compare(password,user.password);
+    const matchPassword=await bcrypt.compare(password,user.password);
     if(!matchPassword)
     {
         res.status(401).json({message:"entered current password incorrect"});
         return ;
     }
-    const hashedPswrd=bcrypt.hash(password,10);
-    user.findOneAndUpdate({email:email},{password:hashedPswrd});
+    const hashedPswrd=await bcrypt.hash(password,10);
+    await userModel.findOneAndUpdate({email:email},{password:hashedPswrd});
     res.status(200).json({message:"password updated successfully."})
 }
 
+//function to reset password if user forget it
 async function forgotPassword(req,res)
 {
     const {email}=req.body;
