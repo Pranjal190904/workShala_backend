@@ -118,7 +118,7 @@ async function changePassword(req,res)
         res.status(401).json({message:"entered current password incorrect"});
         return ;
     }
-    const hashedPswrd=await bcrypt.hash(password,10);
+    const hashedPswrd=await bcrypt.hash(newPassword,10);
     await userModel.findOneAndUpdate({email:email},{password:hashedPswrd});
     res.status(200).json({message:"password updated successfully."})
 }
