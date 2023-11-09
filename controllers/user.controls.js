@@ -63,7 +63,7 @@ async function verifyEmail(req,res)
     }
     await userModel.findOneAndUpdate({email: email},{isVerified: true,});
     await otpModel.findOneAndDelete({email: email});
-    res.json({message: "user verified successfully."});
+    res.status(200).json({message: "user verified successfully."});
 }
 
 //function for user login
@@ -77,6 +77,11 @@ async function userLogin(req,res)
         return ;
     }
     const matchPswrd=await bcrypt.compare(password,user.password);
+    if(!matchPswrd)
+    {
+        res.status(401).json({message:"password incorrect."});
+        return ;
+    }
     if(matchPswrd)
     {
         const accessToken=await signAccessToken(user.id);
