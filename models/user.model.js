@@ -3,6 +3,14 @@ const mongoose= require("mongoose");
 //Schema for user registration
 const userSchema=mongoose.Schema(
     {
+        name:{
+            type:String,
+            require:true
+        },
+        phone:{
+            type:Number,
+            require:true
+        },
         email:{
             type: String,
             require: true,
@@ -13,20 +21,10 @@ const userSchema=mongoose.Schema(
             type: String,
             require: true,
         },
-        firstName:{
-            type: String,
-            require: true,
-        },
-        lastName:{
-            type: String,
-        },
         isVerified:{
             type: Boolean,
             require: true,
             default: false,
-        },
-        contact:{
-            type:Number,
         },
         gender:{
             type:String,

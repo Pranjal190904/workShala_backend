@@ -9,7 +9,7 @@ const otpModel=require("../models/otp.model")
 async function userReg(req,res)
 {
     try{
-        const {email,password,firstName,lastName}=req.body; //data received from client side
+        const {name,phone,email,password}=req.body; //data received from client side
 
         const checkUser=await userModel.findOne({email: email});  //checking if user already exist
         if(checkUser)
@@ -20,10 +20,10 @@ async function userReg(req,res)
         const salt=10;
         const hashedPswrd=await bcrypt.hash(password, salt); //hashing password for storing in server
         const user=new userModel({
+            name:name,
+            phone:phone,
             email: email,
-            password: hashedPswrd,
-            firstName: firstName,
-            lastName: lastName,
+            password: hashedPswrd
         });
         const savedUser=await user.save(); //user data saved in server
         const accessToken=await signAccessToken(savedUser.id);
@@ -49,47 +49,58 @@ async function userReg(req,res)
 //function to verify email
 async function verifyEmail(req,res)
 {
-    const {email,otp}=req.body;
-    const otpVerify=await otpModel.findOne({email: email});
-    if(!otpVerify)
-    {
-        res.status(404).json({message:"email not registered."});
-        return ;
+    try{
+        const {email,otp}=req.body;
+        const otpVerify=await otpModel.findOne({email: email});
+        if(!otpVerify)
+        {
+            res.status(404).json({message:"email not registered."});
+            return ;
+        }
+        if(otp!=otpVerify.otp)
+        {
+            res.status(401).json({message:"entered otp is incorrect"});
+            return ;
+        }
+        await userModel.findOneAndUpdate({email: email},{isVerified: true,});
+        await otpModel.findOneAndDelete({email: email});
+        res.status(200).json({message: "user verified successfully."});
     }
-    if(otp!=otpVerify.otp)
-    {
-        res.status(401).json({message:"entered otp is incorrect"});
-        return ;
+    catch(err){
+        res.status(500).json({message:"server error."});
     }
-    await userModel.findOneAndUpdate({email: email},{isVerified: true,});
-    await otpModel.findOneAndDelete({email: email});
-    res.status(200).json({message: "user verified successfully."});
 }
 
 //function for user login
 async function userLogin(req,res)
 {
-    const {email,password}=req.body;
-    const user=await userModel.findOne({email: email});
-    if(!user)
-    {
-        res.status(404).json({message:"user not found"});
-        return ;
+    try{
+        const {email,password}=req.body;
+        const user=await userModel.findOne({email: email});
+        if(!user)
+        {
+            res.status(404).json({message:"user not found"});
+            return ;
+        }
+        const matchPswrd=await bcrypt.compare(password,user.password);
+        if(!matchPswrd)
+        {
+            res.status(401).json({message:"password incorrect."});
+            return ;
+        }
+        if(matchPswrd)
+        {
+            const accessToken=await signAccessToken(user.id);
+            const refreshToken=await signRefreshToken(user.id);
+            res.status(200).json({
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+            })
+        }
     }
-    const matchPswrd=await bcrypt.compare(password,user.password);
-    if(!matchPswrd)
+    catch(err)
     {
-        res.status(401).json({message:"password incorrect."});
-        return ;
-    }
-    if(matchPswrd)
-    {
-        const accessToken=await signAccessToken(user.id);
-        const refreshToken=await signRefreshToken(user.id);
-        res.status(200).json({
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-        })
+        res.status(500).json({message:"server error."});
     }
 }
 
@@ -97,89 +108,122 @@ async function userLogin(req,res)
 //function to generate new access token using refresh token
 async function refreshToken(req,res)
 {
-    const {refToken}=req.body;
-    const userId=await verifyRefreshToken(refToken);
-    const accessToken=await signAccessToken(userId);
-    const refreshToken=await signRefreshToken(userId);
-    res.status(200).json({
-        accessToken:accessToken,
-        refreshToken:refreshToken,
-    });
+    try{    
+        const {refToken}=req.body;
+        const userId=await verifyRefreshToken(refToken);
+        const accessToken=await signAccessToken(userId);
+        const refreshToken=await signRefreshToken(userId);
+        res.status(200).json({
+            accessToken:accessToken,
+            refreshToken:refreshToken,
+        });
+    }
+    catch(err)
+    {
+        res.status(500).json({message:"server error."});
+    }
 }
 
 //function to change password
 async function changePassword(req,res)
 {
-    const {email,password,newPassword}=req.body;
-    const user=await userModel.findOne({email:email});
-    if(!user)
-    {
-        res.status(404).json({message:"user not found"});
-        return ;
+    try{
+        const {email,password,newPassword}=req.body;
+        const user=await userModel.findOne({email:email});
+        if(!user)
+        {
+            res.status(404).json({message:"user not found"});
+            return ;
+        }
+        const matchPassword=await bcrypt.compare(password,user.password);
+        if(!matchPassword)
+        {
+            res.status(401).json({message:"entered current password incorrect"});
+            return ;
+        }
+        const hashedPswrd=await bcrypt.hash(newPassword,10);
+        await userModel.findOneAndUpdate({email:email},{password:hashedPswrd});
+        res.status(200).json({message:"password updated successfully."})
     }
-    const matchPassword=await bcrypt.compare(password,user.password);
-    if(!matchPassword)
+    catch(err)
     {
-        res.status(401).json({message:"entered current password incorrect"});
-        return ;
+        res.status(500).json({message:"server error."});
     }
-    const hashedPswrd=await bcrypt.hash(newPassword,10);
-    await userModel.findOneAndUpdate({email:email},{password:hashedPswrd});
-    res.status(200).json({message:"password updated successfully."})
 }
 
 //function to reset password if user forget it
 async function forgotPassword(req,res)
 {
-    const {email}=req.body;
-    const user=await userModel.findOne({email:email});
-    if(!user)
+    try
     {
-        res.status(404).json({message:"user not registered."});
-        return ;
+        const {email}=req.body;
+        const user=await userModel.findOne({email:email});
+        if(!user)
+        {
+            res.status(404).json({message:"user not registered."});
+            return ;
+        }
+        const otp=Math.ceil(Math.random()*8999+1000);
+        const newOtp=new otpModel({
+            email: email,
+            otp: otp,
+        });
+        await newOtp.save();
+        await sendmail(email,otp);
+        res.status(200).json({message:"OTP sent successfully to your registered email."})
     }
-    const otp=Math.ceil(Math.random()*8999+1000);
-    const newOtp=new otpModel({
-        email: email,
-        otp: otp,
-    });
-    await newOtp.save();
-    await sendmail(email,otp);
-    res.status(200).json({message:"OTP sent successfully to your registered email."})
+    catch(err)
+    {
+        res.status(500).json({message:"server error."});
+    }
 }
 
 //function to verify otp
 async function verifyOtp(req,res)
 {
-    const {email,otp}=req.body;
-    const otpVerify=await otpModel.findOne({email:email});
-    if(!otpVerify)
+    try
     {
-        res.status(404).json({message:"otp expired"});
-        return ;
+        const {email,otp}=req.body;
+        const otpVerify=await otpModel.findOne({email:email});
+        if(!otpVerify)
+        {
+            res.status(404).json({message:"otp expired"});
+            return ;
+        }
+        if(otpVerify.otp!=otp)
+        {
+            res.status(401).json({message:"incorrect otp entered"});
+            return ;
+        }
+        await otpModel.findOneAndDelete({email:email});
+        res.status(200).json({message:"otp verified successfully."});
     }
-    if(otpVerify.otp!=otp)
+    catch(err)
     {
-        res.status(401).json({message:"incorrect otp entered"});
-        return ;
+        res.status(500).json({message:"server error."});
     }
-    await otpModel.findOneAndDelete({email:email});
-    res.status(200).json({message:"otp verified successfully."});
 }
 
 //function to set new password
 async function setNewPassword(req,res)
 {
-    const {email,newPassword}=req.body;
-    const user=await userModel.findOne({email:email});
-    if(!user)
+    try
     {
-        res.status(404).json({message:"user not found."});
-        return ;
+        const {email,newPassword}=req.body;
+        const user=await userModel.findOne({email:email});
+        if(!user)
+        {
+            res.status(404).json({message:"user not found."});
+            return ;
+        }
+        const hashedPswrd=await bcrypt.hash(newPassword,10);
+        await userModel.findOneAndUpdate({email:email},{password:hashedPswrd});
+        res.status(200).json({message:"password reset successful."});
     }
-    const hashedPswrd=await bcrypt.hash(newPassword,10);
-    await userModel.findOneAndUpdate({email:email},{password:hashedPswrd});
-    res.status(200).json({message:"password reset successful."});
+    catch(err)
+    {
+        res.status(500).json({message:"server error."});
+    }
 }
 
 module.exports={userReg,userLogin,refreshToken,verifyEmail,changePassword,forgotPassword,verifyOtp,setNewPassword};
