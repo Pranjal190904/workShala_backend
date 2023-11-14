@@ -5,7 +5,7 @@ async function companyData(req,res)
 {
     try{
         const companies=await companyModel.find({});
-        res.status(200).json(companies);
+        res.status(200).json({companies:companies});
     }
     catch(err)
     {
