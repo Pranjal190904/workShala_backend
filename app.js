@@ -4,6 +4,7 @@ const mongoose=require('mongoose');
 const bodyParser=require('body-parser');
 const routerUser=require('./routes/user.route');
 const routerCompany=require("./routes/company.route")
+const cors=require("cors");
 
 const app=express();
 
@@ -16,6 +17,9 @@ mongoose.connect(`${dbUrl}`)
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
+app.use(cors({
+    origin: "http://localhost:5173",
+}));
 app.use(routerUser);
 app.use(routerCompany);
 
