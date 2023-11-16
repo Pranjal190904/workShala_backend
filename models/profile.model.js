@@ -2,8 +2,9 @@ const mongoose=require("mongoose");
 
 //schema for user profile
 const profileSchema=mongoose.Schema({
-    email:{
-        type:String
+    userId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"userdata"
     },
     workStatus:{
         type:String

@@ -38,4 +38,22 @@ async function signRefreshToken(id)
     })
 }
 
-module.exports={signAccessToken,signRefreshToken};
+//function to generate reset password token
+async function signResetPasswordToken(email)
+{
+    return new Promise((resolve,reject)=>{
+        const payload={
+            aud:email
+        }
+        const secret=process.env.resetPasswordTokenSecretKey;
+        const options={
+            expiresIn:600
+        }
+        jwt.sign(payload,secret,options,(err,token)=>{
+            if(err) reject(err);
+            resolve(token);
+        })
+    })
+}
+
+module.exports={signAccessToken,signRefreshToken,signResetPasswordToken};

@@ -1,9 +1,10 @@
 const userModel=require('../models/user.model');
 const bcrypt=require('bcrypt');
-const {signAccessToken,signRefreshToken}=require('../utils/genToken');
+const {signAccessToken,signRefreshToken,signResetPasswordToken}=require('../utils/genToken');
 const {verifyAccessToken,verifyRefreshToken}=require('../utils/verifyToken');
 const {sendmail}=require('../utils/mailer');
 const otpModel=require("../models/otp.model")
+const jwt=require("jsonwebtoken");
 
 //function for user registration
 async function userReg(req,res)
@@ -196,7 +197,8 @@ async function verifyOtp(req,res)
             return ;
         }
         await otpModel.findOneAndDelete({email:email});
-        res.status(200).json({message:"otp verified successfully."});
+        const resetPasswordToken=await signResetPasswordToken(email);
+        res.status(200).json({message:"otp verified successfully.",resetPasswordToken:resetPasswordToken});
     }
     catch(err)
     {
@@ -210,15 +212,29 @@ async function setNewPassword(req,res)
     try
     {
         const {email,newPassword}=req.body;
-        const user=await userModel.findOne({email:email});
-        if(!user)
+        if(!req.headers['authorization'])
         {
-            res.status(404).json({message:"user not found."});
+            res.status(401).json({message:"unauthorized"});
             return ;
         }
-        const hashedPswrd=await bcrypt.hash(newPassword,10);
-        await userModel.findOneAndUpdate({email:email},{password:hashedPswrd});
-        res.status(200).json({message:"password reset successful."});
+        const authHeader=req.headers['authorization'];
+        const token=authHeader.split(' ')[1];
+        jwt.verify(token,process.env.resetPasswordTokenSecretKey,async (err,payload)=>{
+            if(err)
+            {
+                res.status(401).json({message:"unauthorized"});
+                return ;
+            }
+            const user=await userModel.findOne({email:email});
+            if(!user)
+            {
+                res.status(404).json({message:"user not found."});
+                return ;
+            }
+            const hashedPswrd=await bcrypt.hash(newPassword,10);
+            await userModel.findOneAndUpdate({email:email},{password:hashedPswrd});
+            res.status(200).json({message:"password reset successful."});
+        })
     }
     catch(err)
     {
