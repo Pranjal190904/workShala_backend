@@ -5,6 +5,7 @@ const bodyParser=require('body-parser');
 const routerUser=require('./routes/user.route');
 const routerCompany=require("./routes/company.route");
 const routerInternship=require("./routes/internship.route");
+const routerWelcome=require("./routes/welcome.route");
 const cors=require("cors");
 
 const app=express();
@@ -25,5 +26,5 @@ app.use(cors({
 app.use(routerUser);
 app.use(routerCompany);
 app.use(routerInternship);
-
+app.use(routerWelcome);
 app.listen(port);
