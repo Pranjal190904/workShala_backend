@@ -53,9 +53,15 @@ async function verifyEmail(req,res)
     try{
         const {email,otp}=req.body;
         const otpVerify=await otpModel.findOne({email: email});
-        if(!otpVerify)
+        const user=await userModel.findOne({email:email});
+        if(!user)
         {
             res.status(404).json({message:"email not registered."});
+            return ;
+        }
+        if(!otpVerify)
+        {
+            res.status(400).json({message:"user already verified."});
             return ;
         }
         if(otp!=otpVerify.otp)

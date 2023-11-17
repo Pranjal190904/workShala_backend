@@ -8,12 +8,7 @@ const otpSchema=mongoose.Schema({
     },
     otp: {
         type: Number,
-        require: true,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expireAfterSeconds: 300
+        require: true
     }
 });
 
