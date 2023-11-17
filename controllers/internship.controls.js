@@ -4,7 +4,7 @@ const internshipModel=require("../models/internship.model");
 async function internshipData(req,res){
     try{
         const internships=await internshipModel.find({});
-        res.status(200).json({internships:internships});
+        res.status(200).json(internships);
     }
     catch(err)
     {
