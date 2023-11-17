@@ -25,6 +25,12 @@ const userSchema=mongoose.Schema(
             type: Boolean,
             require: true,
             default: false,
+        },
+        workStatus:{
+            type:String,
+        },
+        skills:{
+            type:Array,
         }
     }
 )

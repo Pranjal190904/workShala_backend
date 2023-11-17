@@ -1,4 +1,3 @@
-const profileModel=require("../models/profile.model")
 const userModel=require("../models/user.model")
 require('dotenv').config();
 const jwt=require("jsonwebtoken");
@@ -22,22 +21,7 @@ async function profileData(req,res)
                 return ;
             }
             const userId=payload.aud;
-            const checkUser=await profileModel.findOne({userId:userId});
-            if(checkUser)
-            {
-                res.status(400).json({message:"user profile already exist."});
-                return ;
-            }
-            const user=await userModel.findOne({_id:userId});
-            const profile=new profileModel({
-                userId:userId,
-                name:user.name,
-                email:user.email,
-                phone:user.phone,
-                workStatus:workStatus,
-                skills:skills
-            });
-            await profile.save();
+            const user=await userModel.findOneAndUpdate({_id:userId},{workStatus:workStatus,skills:skills});
             res.status(201).json({message:"skills and work status added successfully."})
         });
     }

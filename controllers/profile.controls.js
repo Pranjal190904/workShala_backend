@@ -1,4 +1,4 @@
-const profileModel=require("../models/profile.model");
+const userModel=require("../models/user.model")
 const jwt=require("jsonwebtoken");
 require("dotenv").config();
 
@@ -20,7 +20,7 @@ async function showProfile(req,res)
                 return ;
             }
             const userId=payload.aud;
-            const profile=await profileModel.findOne({userId:userId});
+            const profile=await userModel.findOne({_id:userId});
             res.status(200).json({name:profile.name,email:profile.email,skills:profile.skills});
         })
     }
