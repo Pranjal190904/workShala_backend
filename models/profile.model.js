@@ -6,6 +6,15 @@ const profileSchema=mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:"userdata"
     },
+    name:{
+        type:String,
+    },
+    email:{
+        type:String,
+    },
+    phone:{
+        type:Number,
+    },
     workStatus:{
         type:String
     },

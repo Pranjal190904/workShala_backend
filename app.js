@@ -6,6 +6,7 @@ const routerUser=require('./routes/user.route');
 const routerCompany=require("./routes/company.route");
 const routerInternship=require("./routes/internship.route");
 const routerWelcome=require("./routes/welcome.route");
+const routerProfile=require("./routes/profile.route");
 const cors=require("cors");
 
 const app=express();
@@ -27,4 +28,5 @@ app.use(routerUser);
 app.use(routerCompany);
 app.use(routerInternship);
 app.use(routerWelcome);
+app.use(routerProfile);
 app.listen(port);
