@@ -30,11 +30,17 @@ async function userReg(req,res)
         const accessToken=await signAccessToken(savedUser.id);
         const refreshToken=await signRefreshToken(savedUser.id);
         const otp=Math.ceil(Math.random()*8999+1000);
-        const newOtp=new otpModel({
-            email: email,
-            otp: otp,
-        });
-        await newOtp.save();
+        const otpCheck=await otpModel.findOne({email:email});
+        if(!otpCheck){
+            const newOtp=new otpModel({
+                email: email,
+                otp: otp,
+            });
+            await newOtp.save();
+        }
+        else{
+            await otpModel.findOneAndUpdate({email:email},{otp:otp});
+        }
         await sendmail(email,otp);
         res.status(201).json({
             message:"user added successfully, please verify your email.",
@@ -171,11 +177,18 @@ async function forgotPassword(req,res)
             return ;
         }
         const otp=Math.ceil(Math.random()*8999+1000);
-        const newOtp=new otpModel({
-            email: email,
-            otp: otp,
-        });
-        await newOtp.save();
+        const otpCheck=await otpModel.findOne({email:email});
+        if(!otpCheck){
+            const newOtp=new otpModel({
+                email: email,
+                otp: otp,
+            });
+            await newOtp.save();
+        }
+        else
+        {
+            await otpModel.findOneAndUpdate({email:email},{otp:otp});
+        }
         await sendmail(email,otp);
         res.status(200).json({message:"OTP sent successfully to your registered email."})
     }
