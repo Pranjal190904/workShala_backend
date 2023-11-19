@@ -13,22 +13,31 @@ async function userReg(req,res)
         const {name,phone,email,password}=req.body; //data received from client side
 
         const checkUser=await userModel.findOne({email: email});  //checking if user already exist
-        if(checkUser)
+        if(checkUser && checkUser.isVerified)
         {
             res.status(400).json({message:"User already exist"});
             return ;
         }
         const salt=10;
         const hashedPswrd=await bcrypt.hash(password, salt); //hashing password for storing in server
-        const user=new userModel({
-            name:name,
-            phone:phone,
-            email: email,
-            password: hashedPswrd
-        });
-        const savedUser=await user.save(); //user data saved in server
-        const accessToken=await signAccessToken(savedUser.id);
-        const refreshToken=await signRefreshToken(savedUser.id);
+        let accessToken,refreshToken;
+        if(checkUser)
+        {
+            await userModel.findOneAndUpdate({email:email},{name:name,phone:phone,password:hashedPswrd});
+            accessToken=await signAccessToken(checkUser.id);
+            refreshToken=await signRefreshToken(checkUser.id);
+        }
+        else{
+            const user=new userModel({
+                name:name,
+                phone:phone,
+                email: email,
+                password: hashedPswrd
+            });
+            const savedUser=await user.save(); //user data saved in server
+            accessToken=await signAccessToken(savedUser.id);
+            refreshToken=await signRefreshToken(savedUser.id);
+        }
         const otp=Math.ceil(Math.random()*8999+1000);
         const otpCheck=await otpModel.findOne({email:email});
         if(!otpCheck){
@@ -93,6 +102,11 @@ async function userLogin(req,res)
         if(!user)
         {
             res.status(404).json({message:"user not found"});
+            return ;
+        }
+        if(!user.isVerified)
+        {
+            res.status(400).json({message:"user not verified."})
             return ;
         }
         const matchPswrd=await bcrypt.compare(password,user.password);
