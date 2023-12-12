@@ -6,13 +6,12 @@ require("dotenv").config();
 async function showProfile(req,res)
 {
     try{
-        if(!req.headers['authorization'])
+        const token=req.cookies.accessToken;
+        if(!token)
         {
             res.status(401).json({message:"Unauthorized"});
             return ;
         }
-        const authHeader=req.headers['authorization'];
-        const token=authHeader.split(' ')[1];
         jwt.verify(token,process.env.accesTokenSecretKey,async (err,payload)=>{
             if(err)
             {

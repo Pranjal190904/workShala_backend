@@ -8,6 +8,7 @@ const routerInternship=require("./routes/internship.route");
 const routerWelcome=require("./routes/welcome.route");
 const routerProfile=require("./routes/profile.route");
 const cors=require("cors");
+const cookieParser=require('cookie-parser');
 
 const app=express();
 
@@ -20,6 +21,7 @@ mongoose.connect(`${dbUrl}`)
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
+app.use(cookieParser());
 app.use(cors({
     origin: ["http://localhost:5173","http://localhost:61744","https://workshala-navy.vercel.app"],
     credentials: true,

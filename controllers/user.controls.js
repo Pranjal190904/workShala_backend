@@ -20,12 +20,9 @@ async function userReg(req,res)
         }
         const salt=10;
         const hashedPswrd=await bcrypt.hash(password, salt); //hashing password for storing in server
-        let accessToken,refreshToken;
         if(checkUser)
         {
             await userModel.findOneAndUpdate({email:email},{name:name,phone:phone,password:hashedPswrd});
-            accessToken=await signAccessToken(checkUser.id);
-            refreshToken=await signRefreshToken(checkUser.id);
         }
         else{
             const user=new userModel({
@@ -35,8 +32,6 @@ async function userReg(req,res)
                 password: hashedPswrd
             });
             const savedUser=await user.save(); //user data saved in server
-            accessToken=await signAccessToken(savedUser.id);
-            refreshToken=await signRefreshToken(savedUser.id);
         }
         const otp=Math.ceil(Math.random()*8999+1000);
         const otpCheck=await otpModel.findOne({email:email});
@@ -52,9 +47,7 @@ async function userReg(req,res)
         }
         await sendmail(email,otp);
         res.status(201).json({
-            message:"user added successfully, please verify your email.",
-            accessToken:accessToken,
-            refreshToken:refreshToken,
+            message:"user added successfully, please verify your email."
         }); 
     }
     catch(err){
@@ -84,8 +77,11 @@ async function verifyEmail(req,res)
             res.status(401).json({message:"entered otp is incorrect"});
             return ;
         }
-        await userModel.findOneAndUpdate({email: email},{isVerified: true,});
+        await userModel.findOneAndUpdate({email: email},{isVerified: true});
+        const accessToken=await signAccessToken(user.id);
+        const refreshToken=await signRefreshToken(user.id);
         await otpModel.findOneAndDelete({email: email});
+        res.cookie('accessToken',accessToken);
         res.status(200).json({message: "user verified successfully."});
     }
     catch(err){
@@ -119,10 +115,8 @@ async function userLogin(req,res)
         {
             const accessToken=await signAccessToken(user.id);
             const refreshToken=await signRefreshToken(user.id);
-            res.status(200).json({
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-            })
+            res.cookie('accessToken',accessToken);
+            res.status(200).json({message:"login successful."})
         }
     }
     catch(err)
@@ -231,7 +225,8 @@ async function verifyOtp(req,res)
         }
         await otpModel.findOneAndDelete({email:email});
         const resetPasswordToken=await signResetPasswordToken(email);
-        res.status(200).json({message:"otp verified successfully.",resetPasswordToken:resetPasswordToken});
+        res.cookie('resetPasswordToken',resetPasswordToken);
+        res.status(200).json({message:"otp verified successfully."});
     }
     catch(err)
     {
@@ -245,13 +240,12 @@ async function setNewPassword(req,res)
     try
     {
         const {email,newPassword}=req.body;
-        if(!req.headers['authorization'])
+        const token=req.cookies.resetPasswordToken;
+        if(!token)
         {
             res.status(401).json({message:"unauthorized"});
             return ;
         }
-        const authHeader=req.headers['authorization'];
-        const token=authHeader.split(' ')[1];
         jwt.verify(token,process.env.resetPasswordTokenSecretKey,async (err,payload)=>{
             if(err)
             {
