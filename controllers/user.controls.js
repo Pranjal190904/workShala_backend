@@ -10,7 +10,7 @@ const jwt=require("jsonwebtoken");
 async function userReg(req,res)
 {
     try{
-        const {name,phone,email,password}=req.body; //data received from client side
+        const {name,phonenumber,email,password}=req.body; //data received from client side
 
         const checkUser=await userModel.findOne({email: email});  //checking if user already exist
         if(checkUser && checkUser.isVerified)
@@ -22,16 +22,16 @@ async function userReg(req,res)
         const hashedPswrd=await bcrypt.hash(password, salt); //hashing password for storing in server
         if(checkUser)
         {
-            await userModel.findOneAndUpdate({email:email},{name:name,phone:phone,password:hashedPswrd});
+            await userModel.findOneAndUpdate({email:email},{name:name,phone:phonenumber,password:hashedPswrd});
         }
         else{
             const user=new userModel({
                 name:name,
-                phone:phone,
+                phone:phonenumber,
                 email: email,
                 password: hashedPswrd
             });
-            const savedUser=await user.save(); //user data saved in server
+            await user.save(); //user data saved in server
         }
         const otp=Math.ceil(Math.random()*8999+1000);
         const otpCheck=await otpModel.findOne({email:email});
