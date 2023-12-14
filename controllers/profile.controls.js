@@ -7,6 +7,7 @@ async function showProfile(req,res)
 {
     try{
         const token=req.cookies.accessToken;
+        console.log(token);
         if(!token)
         {
             res.status(401).json({message:"Unauthorized"});
