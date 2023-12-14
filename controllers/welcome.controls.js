@@ -7,7 +7,9 @@ async function profileData(req,res)
 {
     try{
         const {workStatus,skills}=req.body;
+
         const token=req.cookies.accessToken;
+        console.log({token});
         if(!token)
         {
             res.status(401).json({message:"unauthorized"});
