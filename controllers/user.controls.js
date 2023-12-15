@@ -81,7 +81,7 @@ async function verifyEmail(req,res)
         const accessToken=await signAccessToken(user.id);
         const refreshToken=await signRefreshToken(user.id);
         await otpModel.findOneAndDelete({email: email});
-        res.cookie('accessToken',accessToken);
+        res.cookie('accessToken',accessToken,{sameSite:'None',secure:true});
         res.status(200).json({message: "user verified successfully."});
     }
     catch(err){
@@ -115,7 +115,7 @@ async function userLogin(req,res)
         {
             const accessToken=await signAccessToken(user.id);
             const refreshToken=await signRefreshToken(user.id);
-            res.cookie('accessToken',accessToken);
+            res.cookie('accessToken',accessToken,{sameSite:'None',secure:true});
             res.status(200).json({message:"login successful."})
         }
     }
