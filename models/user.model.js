@@ -34,7 +34,7 @@ const userSchema=mongoose.Schema(
         },
         photoUrl:{
             type:String,
-        }
+            default: "https://res.cloudinary.com/dw6jj0t6z/image/upload/v1703406134/bgearbfemdeqputjzsth.jpg",        }
     }
 )
 
