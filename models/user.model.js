@@ -31,6 +31,9 @@ const userSchema=mongoose.Schema(
         },
         skills:{
             type:Array,
+        },
+        photoUrl:{
+            type:String,
         }
     }
 )
